@@ -64,6 +64,18 @@ describe("POST /api/entries", () => {
     expect(entry).not.toHaveProperty("user_id");
   });
 
+  it("줄바꿈이 있는 일기는 LF로 정규화해 저장한다", async () => {
+    const res = await POST(post("  첫째 줄\r\n둘째 줄\r셋째 줄  "));
+    expect(res.status).toBe(201);
+    expect((await res.json()).entry.content).toBe("첫째 줄\n둘째 줄\n셋째 줄");
+  });
+
+  it("공백·줄바꿈만 있는 일기는 400", async () => {
+    const res = await POST(post(" \n\r\n  \n"));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.code).toBe("validation_error");
+  });
+
   it("두 모델이 모두 실패하면 201과 failed", async () => {
     const res = await POST(post("[분석실패] 테스트"));
     expect(res.status).toBe(201);

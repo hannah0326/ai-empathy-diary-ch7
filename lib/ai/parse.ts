@@ -1,6 +1,6 @@
 // 작성: 2026-11-19 11:35 KST
 // 모델 응답 문자열에서 JSON을 꺼내고 검증한다. 모델 응답은 그대로 믿지 않는다.
-import { isEmotion, isIntensity, type Emotion, type Intensity } from "../types";
+import { isEmotion, type Emotion, type Intensity } from "../types";
 import { MAX_MESSAGE_LENGTH } from "./config";
 
 export interface ParsedAnalysis {
@@ -81,7 +81,10 @@ export function parseAnalysis(raw: unknown): ParseOutcome {
   const { emotion, intensity, message, crisis } = data as Record<string, unknown>;
 
   if (!isEmotion(emotion)) return { ok: false, reason: "invalid_format" };
-  if (!isIntensity(intensity)) return { ok: false, reason: "invalid_format" };
+  // 강도는 1~5 정수만 허용한다(types.ts의 Intensity와 같은 범위).
+  if (typeof intensity !== "number" || !Number.isInteger(intensity) || intensity < 1 || intensity > 5) {
+    return { ok: false, reason: "invalid_format" };
+  }
   if (typeof crisis !== "boolean") return { ok: false, reason: "invalid_format" };
   if (typeof message !== "string") return { ok: false, reason: "invalid_format" };
 
@@ -93,5 +96,5 @@ export function parseAnalysis(raw: unknown): ParseOutcome {
   if (sentences < 2 || sentences > 4) return { ok: false, reason: "invalid_format" };
   if (containsContactInfo(trimmed)) return { ok: false, reason: "invalid_format" };
 
-  return { ok: true, value: { emotion, intensity, message: trimmed, crisis } };
+  return { ok: true, value: { emotion, intensity: intensity as Intensity, message: trimmed, crisis } };
 }

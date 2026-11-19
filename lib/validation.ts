@@ -9,16 +9,16 @@ export type ContentCheck =
 /**
  * 일기 내용을 검사하고 정리한다(PRD 7.1절).
  * - 문자열이 아니면 거절
- * - 줄 바꿈은 한 칸 공백으로 바꾸고, 앞뒤 공백은 지운다
- * - 정리 후 비어 있으면 거절, 200자(글자 단위) 초과면 거절
+ * - 줄바꿈은 허용한다. CRLF와 CR은 LF로 바꿔 저장하고, 앞뒤 공백·줄바꿈은 지운다
+ * - 정리 후 비어 있으면 거절, 줄바꿈 포함 200자(글자 단위) 초과면 거절
  */
 export function validateContent(input: unknown): ContentCheck {
   if (typeof input !== "string") {
     return { ok: false, message: "일기 내용은 글자로 보내 주세요." };
   }
-  const content = input.replace(/[\r\n]+/g, " ").trim();
+  const content = input.replace(/\r\n?/g, "\n").trim();
   if (content.length === 0) {
-    return { ok: false, message: "일기를 한 줄 이상 적어 주세요." };
+    return { ok: false, message: "일기를 적어 주세요." };
   }
   // 이모지 등을 한 글자로 세기 위해 코드 포인트 단위로 센다.
   if (Array.from(content).length > MAX_CONTENT_LENGTH) {

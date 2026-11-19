@@ -6,7 +6,7 @@
 // 상수 (PRD 7.1절, 7.2절, F4)
 // ---------------------------------------------------------------------------
 
-/** 일기 글자 수 상한(공백 제거 후 1자 이상, 최대 200자). 서버에서도 검사한다. */
+/** 일기 글자 수 상한(앞뒤 공백 제거 후 줄바꿈 포함 1~200자). 서버에서도 검사한다. */
 export const MAX_CONTENT_LENGTH = 200;
 
 /** 하루(KST 기준) 일기 작성 상한. 넘으면 429. */
@@ -28,8 +28,8 @@ export const EMOTIONS = [
 ] as const;
 export type Emotion = (typeof EMOTIONS)[number];
 
-/** 감정 강도 3단계. 1 약함, 2 보통, 3 강함. */
-export const INTENSITIES = [1, 2, 3] as const;
+/** 감정 강도 5단계. 1 매우 약함, 2 약함, 3 보통, 4 강함, 5 매우 강함. (2026-11-19 사용자 요청으로 3단계에서 변경) */
+export const INTENSITIES = [1, 2, 3, 4, 5] as const;
 export type Intensity = (typeof INTENSITIES)[number];
 
 export function isEmotion(value: unknown): value is Emotion {
@@ -37,7 +37,7 @@ export function isEmotion(value: unknown): value is Emotion {
 }
 
 export function isIntensity(value: unknown): value is Intensity {
-  return value === 1 || value === 2 || value === 3;
+  return typeof value === "number" && (INTENSITIES as readonly number[]).includes(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -74,7 +74,7 @@ export interface AnalyzeFailure {
 export type AnalyzeResult = AnalyzeSuccess | AnalyzeFailure;
 
 /**
- * 일기 한 줄을 분석한다. 입력은 서버 검증을 통과한 문자열이다.
+ * 일기(여러 줄일 수 있음)를 분석한다. 입력은 서버 검증을 통과한 문자열이다.
  * 일기 속 지시문을 따르지 않아야 한다(프롬프트 인젝션 대비).
  * 예외를 던지지 않고 AnalyzeFailure로 돌려주는 것이 계약이다.
  */

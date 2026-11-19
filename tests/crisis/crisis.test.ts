@@ -54,6 +54,16 @@ describe("detectCrisisKeyword: 관용 표현과 평범한 문장", () => {
   });
 });
 
+describe("줄바꿈이 섞인 일기", () => {
+  it("키워드가 줄 사이에 끼어 있어도 잡는다", () => {
+    expect(detectCrisisKeyword("오늘 너무 힘들었다\n죽고\n싶다")).toBe(true);
+    expect(detectCrisisKeyword("힘든 하루\r\n자살\r\n생각")).toBe(true);
+  });
+  it("위기가 아닌 여러 줄 일기는 잡지 않는다", () => {
+    expect(detectCrisisKeyword("오늘은\n맑았다\n기분이 좋다")).toBe(false);
+  });
+});
+
 describe("mergeCrisis", () => {
   it("키워드 OR AI", () => {
     expect(mergeCrisis(false, false)).toBe(false);

@@ -1,18 +1,163 @@
+/* 작성: 2026-11-19 11:35 KST */
 @import "tailwindcss";
 
-/* 1단계 최소 스타일. 일기장 느낌의 디자인은 2단계에서 frontend-developer가 정한다. */
+/*
+ * 디자인 토큰: 따뜻한 종이색 일기장.
+ * 색 대비(WCAG AA 4.5:1 이상)를 지키도록 고른 값이다.
+ *  - 본문 글자(ink)와 종이(paper), 흐린 글자(muted)와 종이
+ *  - 단추 글자(on-accent)와 단추 바탕(accent)
+ * 감정은 색만이 아니라 이름 글자도 항상 함께 보여준다(components/emotion-badge.tsx).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 색 */
+  --paper: #fbf6ec; /* 종이색 바탕 */
+  --card: #fffdf8; /* 카드(더 밝은 종이) */
+  --ink: #3b2f2a; /* 본문 글자 */
+  --muted: #6b5b52; /* 보조 글자 */
+  --line: #e4d6bf; /* 테두리·구분선 */
+  --accent: #a4472a; /* 주요 단추(따뜻한 벽돌색) */
+  --accent-hover: #8a3a21;
+  --on-accent: #ffffff;
+  --soft: #f3e9d6; /* 부드러운 강조 바탕 */
+  --focus: #1d4f91; /* 포커스 표시 */
+  --danger: #a12a1c; /* 오류 글자 */
+  --danger-bg: #fdeceb;
+  --info-bg: #eef3f8;
+
+  /* 위기 카드 */
+  --crisis-bg: #fff1e6;
+  --crisis-border: #b5432a;
+
+  /* 감정 바탕(옅은 색) / 점(진한 색). 글자색은 항상 ink */
+  --emo-joy-bg: #fce9b8;
+  --emo-joy-dot: #c98a00;
+  --emo-flutter-bg: #fbd9e1;
+  --emo-flutter-dot: #c2456b;
+  --emo-calm-bg: #d9ebd6;
+  --emo-calm-dot: #3f8a4a;
+  --emo-sad-bg: #d3e1f2;
+  --emo-sad-dot: #3a6aa6;
+  --emo-lonely-bg: #e2daf0;
+  --emo-lonely-dot: #6b52a3;
+  --emo-anxious-bg: #f9e1c9;
+  --emo-anxious-dot: #c0661a;
+  --emo-angry-bg: #f6cfc6;
+  --emo-angry-dot: #b5392a;
+  --emo-tired-bg: #e3ddd3;
+  --emo-tired-dot: #7a6d60;
+
+  /* 간격·모양 */
+  --space-page: 1.25rem; /* 화면 가장자리 여백(휴대폰) */
+  --radius-paper: 1.25rem;
+  --shadow-paper: 0 1px 2px rgb(80 55 30 / 0.06), 0 6px 18px rgb(80 55 30 / 0.07);
+}
+
+/* 다크 모드: 같은 따뜻함을 어두운 종이로 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #1f1a17;
+    --card: #2a231f;
+    --ink: #f2e8da;
+    --muted: #c3b3a3;
+    --line: #4a3d34;
+    --accent: #e59b72;
+    --accent-hover: #f0ad88;
+    --on-accent: #2a150b;
+    --soft: #352c26;
+    --focus: #8ec1ff;
+    --danger: #ffb4a8;
+    --danger-bg: #4a2420;
+    --info-bg: #25303b;
+
+    --crisis-bg: #3a2420;
+    --crisis-border: #e88a70;
+
+    --emo-joy-bg: #4d3d12;
+    --emo-joy-dot: #f0c04a;
+    --emo-flutter-bg: #4d2b37;
+    --emo-flutter-dot: #f08aa8;
+    --emo-calm-bg: #2b402c;
+    --emo-calm-dot: #86d093;
+    --emo-sad-bg: #26394d;
+    --emo-sad-dot: #86b5ea;
+    --emo-lonely-bg: #3a335c;
+    --emo-lonely-dot: #b9a4f0;
+    --emo-anxious-bg: #4d3621;
+    --emo-anxious-dot: #f0a35c;
+    --emo-angry-bg: #522b26;
+    --emo-angry-dot: #f08e80;
+    --emo-tired-bg: #3b362f;
+    --emo-tired-dot: #b8a998;
+
+    --shadow-paper: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 18px rgb(0 0 0 / 0.25);
+  }
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-soft: var(--soft);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-info-bg: var(--info-bg);
+  --color-crisis-bg: var(--crisis-bg);
+  --color-crisis-border: var(--crisis-border);
+  --radius-paper: var(--radius-paper);
+  --shadow-paper: var(--shadow-paper);
+  /* 글꼴: layout.tsx의 next/font 변수를 우선 쓰고, 없으면 시스템 한글 글꼴 */
+  --font-sans: var(--font-sans-kr), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-diary: var(--font-diary-kr), "Nanum Myeongjo", "Batang", serif;
+}
+
+html {
+  background: var(--paper);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, "Malgun Gothic", sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  /* 한글은 줄 간격을 넉넉히 두면 읽기 편하다 */
+  line-height: 1.75;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* 키보드 포커스 표시: 모든 상호작용 요소에 또렷한 윤곽선 */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+/* 감정별 색 묶음. 컴포넌트는 --emo-bg, --emo-dot만 읽는다 */
+.emo-joy { --emo-bg: var(--emo-joy-bg); --emo-dot: var(--emo-joy-dot); }
+.emo-flutter { --emo-bg: var(--emo-flutter-bg); --emo-dot: var(--emo-flutter-dot); }
+.emo-calm { --emo-bg: var(--emo-calm-bg); --emo-dot: var(--emo-calm-dot); }
+.emo-sad { --emo-bg: var(--emo-sad-bg); --emo-dot: var(--emo-sad-dot); }
+.emo-lonely { --emo-bg: var(--emo-lonely-bg); --emo-dot: var(--emo-lonely-dot); }
+.emo-anxious { --emo-bg: var(--emo-anxious-bg); --emo-dot: var(--emo-anxious-dot); }
+.emo-angry { --emo-bg: var(--emo-angry-bg); --emo-dot: var(--emo-angry-dot); }
+.emo-tired { --emo-bg: var(--emo-tired-bg); --emo-dot: var(--emo-tired-dot); }
+
+/* 움직임을 줄이고 싶은 사용자 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@keyframes diary-pulse {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
 }

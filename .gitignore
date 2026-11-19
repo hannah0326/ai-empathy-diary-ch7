@@ -12,3 +12,18 @@
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# DB 스냅샷 (같은 DB의 다른 프로젝트 표 이름이 들어 있어 올리지 않음)
+/db/snapshots/
+
+# 의존성·빌드 산출물 (Next.js, 테스트)
+/node_modules
+/.next/
+/out/
+/build
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+npm-debug.log*
+*.pem

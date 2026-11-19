@@ -1,12 +1,25 @@
-// 작성: 2026-11-19 10:52 KST
+// 작성: 2026-11-19 10:52 KST (2단계 구현: 2026-11-19 13:05 KST)
 // GET /api/entries (내 일기 목록), POST /api/entries (일기 저장 + 분석 결과 반환)
-// 1단계 뼈대: 로그인 검사(401)와 입력 검증(400)까지만 한다. 본 기능은 2단계에서 구현한다.
 import {
   errorResponse,
   getSessionUserId,
+  jsonResponse,
   unauthorizedResponse,
 } from "@/lib/api";
+import { dbErrorKind } from "@/lib/db";
+import { entryService } from "@/lib/entries/runtime";
+import type { CreateEntryResponse, ListEntriesResponse } from "@/lib/types";
 import { isValidCursor, validateContent } from "@/lib/validation";
+
+// AI 분석은 모델당 최대 20초, 두 모델이면 40초 가까이 걸릴 수 있다.
+// 서버리스 함수의 기본 제한 시간에 걸려 중간에 끊기지 않도록 60초까지 허용한다.
+export const maxDuration = 60;
+
+function internalError(error: unknown): Response {
+  // 오류 종류만 남긴다(메시지에 접속 주소 등이 섞일 수 있다).
+  console.error("[entries] 서버 오류:", dbErrorKind(error));
+  return errorResponse("internal_error", "잠시 문제가 생겼어요. 조금 뒤에 다시 시도해 주세요.");
+}
 
 export async function GET(request: Request) {
   const userId = await getSessionUserId();
@@ -17,10 +30,16 @@ export async function GET(request: Request) {
     return errorResponse("validation_error", "커서 형식이 올바르지 않아요.");
   }
 
-  // TODO(2단계, backend-developer): lib/db로 `diary.entries`를 조회한다.
-  //  - 반드시 `WHERE user_id = ${userId}` 조건을 붙인다(세션의 ID만 사용).
-  //  - created_at DESC, id DESC 순으로 PAGE_SIZE건. 다음 페이지용 nextCursor 계산.
-  return errorResponse("not_implemented", "아직 구현되지 않았어요.");
+  try {
+    const result = await entryService.list(userId, cursor);
+    if (!result.ok) {
+      return errorResponse("validation_error", "커서 형식이 올바르지 않아요.");
+    }
+    const body: ListEntriesResponse = { entries: result.entries, nextCursor: result.nextCursor };
+    return jsonResponse(body);
+  } catch (error) {
+    return internalError(error);
+  }
 }
 
 export async function POST(request: Request) {
@@ -43,10 +62,17 @@ export async function POST(request: Request) {
     return errorResponse("validation_error", content.message);
   }
 
-  // TODO(2단계, backend-developer):
-  //  1) 하루(KST) 작성 수가 DAILY_ENTRY_LIMIT 이상이면 429 daily_limit_exceeded.
-  //  2) 일기를 먼저 저장한다(analysis_status = 'pending'). 분석 중 새로고침해도 일기가 남는다.
-  //  3) lib/crisis 키워드 검사는 항상 실행하고, analyzeDiary(content.content)(lib/ai) 결과와 OR로 합친다.
-  //  4) 분석 성공이면 done, 두 모델 모두 실패면 failed로 갱신하고 201 { entry }를 돌려준다.
-  return errorResponse("not_implemented", "아직 구현되지 않았어요.");
+  try {
+    const result = await entryService.create(userId, content.content);
+    if (!result.ok) {
+      return errorResponse(
+        "daily_limit_exceeded",
+        "오늘은 일기를 20번까지 쓸 수 있어요. 내일 또 만나요.",
+      );
+    }
+    const response: CreateEntryResponse = { entry: result.entry };
+    return jsonResponse(response, 201);
+  } catch (error) {
+    return internalError(error);
+  }
 }

@@ -1,5 +1,5 @@
 // 작성: 2026-11-19 10:52 KST
-// 1단계 뼈대 시험: 로그인 검사(401)와 입력 검증(400), 그 뒤 501(2단계 TODO).
+// 로그인 검사(401)와 입력 검증(400) 시험. 검증 단계에서 끝나므로 DB를 부르지 않는다.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authMock = vi.fn();
@@ -79,14 +79,6 @@ describe("로그인한 요청의 입력 검증", () => {
     expect((await GET_ONE(req, ctx("not-a-uuid"))).status).toBe(400);
     expect((await DELETE(req, ctx("not-a-uuid"))).status).toBe(400);
     expect((await GET(new Request("http://localhost/api/entries?cursor=a%20b"))).status).toBe(400);
-  });
-
-  it("검증을 통과하면 2단계 전까지 501", async () => {
-    expect((await POST(post('{"content":"좋은 하루"}'))).status).toBe(501);
-    expect((await GET(new Request("http://localhost/api/entries"))).status).toBe(501);
-    const req = new Request("http://localhost/api/entries/x");
-    expect((await GET_ONE(req, ctx(VALID_ID))).status).toBe(501);
-    expect((await DELETE(req, ctx(VALID_ID))).status).toBe(501);
   });
 });
 

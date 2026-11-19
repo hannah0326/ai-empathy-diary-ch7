@@ -11,7 +11,8 @@
                     "test:watch":  "vitest",
                     "db:snapshot":  "node --env-file-if-exists=.env scripts/db-snapshot.mjs",
                     "db:migrate":  "node --env-file-if-exists=.env scripts/db-migrate.mjs",
-                    "db:compare":  "node scripts/db-compare.mjs"
+                    "db:compare":  "node scripts/db-compare.mjs",
+                    "db:smoke":  "node --env-file-if-exists=.env scripts/db-smoke.mjs"
                 },
     "dependencies":  {
                          "next":  "16.4.6",

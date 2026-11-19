@@ -4,7 +4,21 @@
 import { access } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
+const ROOT = new URL("../", import.meta.url);
+
 export async function resolve(specifier, context, nextResolve) {
+  // tsconfig의 "@/" 별칭(프로젝트 루트)을 푼다. db-smoke.mjs가 서비스·저장소 코드를 그대로 불러올 때 필요하다.
+  if (specifier.startsWith("@/")) {
+    for (const candidate of [`${specifier.slice(2)}.ts`, `${specifier.slice(2)}/index.ts`]) {
+      try {
+        const url = new URL(candidate, ROOT);
+        await access(fileURLToPath(url));
+        return nextResolve(url.href, context);
+      } catch {
+        // 다음 후보로
+      }
+    }
+  }
   if ((specifier.startsWith("./") || specifier.startsWith("../")) && !/\.[a-z]+$/i.test(specifier)) {
     for (const candidate of [`${specifier}.ts`, `${specifier}/index.ts`]) {
       try {

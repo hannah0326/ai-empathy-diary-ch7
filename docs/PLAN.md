@@ -14,7 +14,7 @@
 | 단계 | 내용 | 담당 | 상태 | 태그 |
 |---|---|---|---|---|
 | 0단계 | PRD | product-manager | 완료 | `DIARY_00_02` (작업 계획과 PRD) |
-| 1단계 | 뼈대 | backend-developer | 대기 | `DIARY_01_01` (1단계 뼈대) |
+| 1단계 | 뼈대 | backend-developer | 완료 (구글 로그인 실제 확인은 3단계) | `DIARY_01_01` (1단계 뼈대) |
 | 2단계 | 백엔드·AI·화면 동시 진행 | backend-developer, ai-integration-specialist, frontend-developer | 대기 | `DIARY_02_01` (2단계 병렬 구현) |
 | 3단계 | 통합 | backend-developer 외 | 대기 | `DIARY_03_01` (3단계 통합) |
 | 4단계 | QA | qa-engineer | 대기 | `DIARY_04_01` (4단계 QA) |

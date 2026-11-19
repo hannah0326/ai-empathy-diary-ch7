@@ -52,7 +52,7 @@ const SAMPLE_CONTENTS = [
 ];
 
 const emotionClassPick = (i: number) => EMOTIONS[i % EMOTIONS.length];
-const intensityPick = (i: number): Intensity => ((i % 3) + 1) as Intensity;
+const intensityPick = (i: number): Intensity => ((i % 5) + 1) as Intensity;
 
 function mockId(n: number) {
   return `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -66,7 +66,8 @@ function buildSeed(count: number, startIndex: number): Entry[] {
     const i = startIndex + k;
     // 하루에 1~2건씩 과거로(날짜별 묶음 확인용)
     const createdAt = new Date(now - (Math.floor(i / 2) * 24 * 60 + (i % 2) * 300 + i * 7) * 60 * 1000).toISOString();
-    const content = SAMPLE_CONTENTS[i % SAMPLE_CONTENTS.length];
+    // i===1: 띄어쓰기 없는 200자(줄바꿈 처리 확인용)
+    const content = i === 1 ? "ㅗ".repeat(200) : SAMPLE_CONTENTS[i % SAMPLE_CONTENTS.length];
     const base = { id: mockId(i + 1), content, createdAt };
     if (i === 2) {
       entries.push({

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function DevPreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
   return (
-    <main id="main" className="mx-auto w-full max-w-xl px-5 py-8">
+    <main id="main" className="mx-auto w-full max-w-3xl px-5 py-8">
       <PreviewBoard />
     </main>
   );

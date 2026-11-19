@@ -113,10 +113,10 @@ export function EntryDetail({ id, client = entriesClient, onDeleted, onUnauthori
   if (!entry) return null;
 
   return (
-    <article className="grid gap-5">
+    <article className="grid min-w-0 grid-cols-1 gap-5">
       <header className="rounded-paper border border-line bg-card p-5 shadow-paper">
         <p className="text-sm text-muted">{formatKstDateTime(entry.createdAt)}</p>
-        <p className="mt-2 font-diary text-xl leading-relaxed text-ink">{entry.content}</p>
+        <p className="mt-2 whitespace-pre-wrap [overflow-wrap:anywhere] font-diary text-xl leading-relaxed text-ink">{entry.content}</p>
       </header>
 
       <EntryBody entry={entry} headingLevel={2} />

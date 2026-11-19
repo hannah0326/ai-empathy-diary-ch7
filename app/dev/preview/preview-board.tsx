@@ -22,10 +22,24 @@ const GALLERY: { label: string; entry: Entry }[] = [
     label: "분석 성공(done)",
     entry: {
       id: "g1",
-      content: "오늘 발표를 무사히 마쳤다",
+      content: "오늘 발표를 무사히 마쳤다\n준비한 만큼 잘 됐다\n\n저녁엔 푹 쉬어야지",
       emotion: "기쁨",
-      intensity: 2,
+      intensity: 4,
       message: "발표를 잘 마치셨다니 정말 뿌듯하시겠어요. 그동안 준비하신 노력이 빛난 하루였네요. 오늘은 스스로를 마음껏 칭찬해 주세요.",
+      crisis: false,
+      analysisStatus: "done",
+      model: "mock-model",
+      createdAt: now,
+    },
+  },
+  {
+    label: "띄어쓰기 없는 긴 글(줄바꿈 확인)",
+    entry: {
+      id: "g0",
+      content: "ㅗ".repeat(200),
+      emotion: "불안",
+      intensity: 2,
+      message: "ㅇ".repeat(120),
       crisis: false,
       analysisStatus: "done",
       model: "mock-model",
@@ -46,7 +60,7 @@ const GALLERY: { label: string; entry: Entry }[] = [
       id: "g4",
       content: "(위기 표시 예시 문장)",
       emotion: "기쁨",
-      intensity: 1,
+      intensity: 5,
       message: "마음을 적어 주셔서 고마워요. 지금 곁에서 듣고 있어요.",
       crisis: true,
       analysisStatus: "done",
@@ -134,7 +148,7 @@ export function PreviewBoard() {
 
       <Block id="p-results" title="2. 결과 표시 상태" hint="쓰기 결과와 기록 상세가 같이 쓰는 표시예요.">
         {GALLERY.map(({ label, entry }) => (
-          <div key={entry.id} className="rounded-paper border border-line bg-card p-5">
+          <div key={entry.id} className="min-w-0 rounded-paper border border-line bg-card p-5">
             <h3 className="mb-3 text-sm font-bold text-muted">{label}</h3>
             <EntryBody entry={entry} headingLevel={3} />
           </div>

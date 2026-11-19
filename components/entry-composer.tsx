@@ -1,5 +1,5 @@
 // 작성: 2026-11-19 11:58 KST
-// 일기 쓰기: 한 줄 입력(200자, 줄바꿈 막기), 남은 글자 수, 보내는 동안 대기 표시, 결과와 오류 상태.
+// 일기 쓰기: 여러 줄 입력(줄바꿈 포함 200자, Enter=보내기, Shift/Alt+Enter=줄바꿈), 남은 글자 수, 보내는 동안 대기 표시, 결과와 오류 상태.
 // 로그인이 만료되면(401) 쓰던 글을 sessionStorage에 보관하고 /login으로 보낸다. 다시 돌아오면 복원한다.
 "use client";
 
@@ -24,8 +24,11 @@ interface Props {
 }
 
 const chars = (s: string) => Array.from(s);
-/** 줄바꿈은 공백으로 바꾸고, 글자(코드 포인트) 기준 200자로 자른다. */
-const normalize = (s: string) => chars(s.replace(/[\r\n]+/g, " ")).slice(0, MAX_CONTENT_LENGTH).join("");
+/** \r\n을 \n으로 통일하고, 줄바꿈을 포함해 글자(코드 포인트) 기준 200자로 자른다. */
+const normalize = (s: string) => chars(s.replace(/\r\n?/g, "\n")).slice(0, MAX_CONTENT_LENGTH).join("");
+/** 입력 칸 높이: 내용에 맞춰 늘리되 3~5줄 사이 */
+const MIN_ROWS = 3;
+const MAX_ROWS = 5;
 
 export function EntryComposer({ client = entriesClient, onUnauthorized }: Props) {
   const router = useRouter();
@@ -36,6 +39,7 @@ export function EntryComposer({ client = entriesClient, onUnauthorized }: Props)
   const [error, setError] = useState<{ kind: ApiFailureKind; message: string } | null>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const areaRef = useRef<HTMLTextAreaElement>(null);
 
   // 로그인 만료로 보관해 둔 글이 있으면 되돌린다.
   useEffect(() => {
@@ -61,6 +65,19 @@ export function EntryComposer({ client = entriesClient, onUnauthorized }: Props)
       setSlow(false);
     };
   }, [sending]);
+
+  // 내용 길이에 맞춰 입력 칸 높이를 조절한다(3~5줄, 넘으면 칸 안에서 스크롤).
+  useEffect(() => {
+    const el = areaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const cs = getComputedStyle(el);
+    const line = parseFloat(cs.lineHeight) || 29;
+    const pad =
+      parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+    const h = Math.min(Math.max(el.scrollHeight, line * MIN_ROWS + pad), line * MAX_ROWS + pad);
+    el.style.height = `${h}px`;
+  }, [text]);
 
   const count = chars(text).length;
   const remaining = MAX_CONTENT_LENGTH - count;
@@ -104,7 +121,7 @@ export function EntryComposer({ client = entriesClient, onUnauthorized }: Props)
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 grid-cols-1 gap-6">
       <form
         ref={formRef}
         aria-busy={sending}
@@ -115,12 +132,13 @@ export function EntryComposer({ client = entriesClient, onUnauthorized }: Props)
         className="rounded-paper border border-line bg-card p-5 shadow-paper"
       >
         <label htmlFor="diary-text" className="font-diary text-xl font-bold text-ink">
-          오늘 있었던 일을 한 줄로 적어 보세요
+          오늘 있었던 일을 적어 보세요
         </label>
         <textarea
           id="diary-text"
           name="content"
-          rows={3}
+          ref={areaRef}
+          rows={MIN_ROWS}
           value={text}
           readOnly={sending}
           maxLength={MAX_CONTENT_LENGTH}
@@ -128,20 +146,29 @@ export function EntryComposer({ client = entriesClient, onUnauthorized }: Props)
           aria-describedby="diary-count diary-help"
           onChange={(e) => setText(normalize(e.target.value))}
           onKeyDown={(e) => {
-            // 한 줄만 쓰는 일기라 Enter는 줄바꿈 대신 보내기. 한글 조합 중(isComposing)인 Enter는 그대로 둔다.
-            if (e.key === "Enter") {
-              if (e.nativeEvent.isComposing) return;
-              e.preventDefault();
-              formRef.current?.requestSubmit();
+            // Enter = 보내기, Shift+Enter 또는 Alt+Enter = 줄바꿈. 한글 조합 중(isComposing)인 Enter는 그대로 둔다.
+            if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+            e.preventDefault();
+            if (e.shiftKey || e.altKey) {
+              if (sending) return;
+              // 브라우저마다 Alt+Enter 기본 동작이 달라서 커서 위치에 직접 줄바꿈을 넣는다.
+              const el = e.currentTarget;
+              const s = el.selectionStart;
+              const next = normalize(text.slice(0, s) + "\n" + text.slice(el.selectionEnd));
+              setText(next);
+              requestAnimationFrame(() => el.setSelectionRange(s + 1, s + 1));
+              return;
             }
+            formRef.current?.requestSubmit();
           }}
-          className="mt-3 block w-full resize-none rounded-2xl border border-line bg-paper px-4 py-3 font-diary text-lg leading-relaxed text-ink placeholder:text-muted read-only:opacity-70"
+          className="mt-3 block w-full resize-none overflow-y-auto rounded-2xl border border-line bg-paper px-4 py-3 font-diary text-lg leading-relaxed text-ink placeholder:text-muted read-only:opacity-70"
         />
         <div className="mt-2 flex items-start justify-between gap-3 text-sm">
-          <p id="diary-help" className="text-muted">
-            줄바꿈 없이 {MAX_CONTENT_LENGTH}자까지 쓸 수 있어요.
+          {/* 눈에는 보이지 않고 화면 낭독기에만 읽히는 사용법 */}
+          <p id="diary-help" className="sr-only">
+            Enter로 보내고, Shift+Enter로 줄을 바꿔요.
           </p>
-          <p id="diary-count" className={remaining <= 20 ? "shrink-0 font-bold text-danger" : "shrink-0 text-muted"}>
+          <p id="diary-count" className={remaining <= 20 ? "ml-auto shrink-0 font-bold text-danger" : "ml-auto shrink-0 text-muted"}>
             {remaining}자 남음
           </p>
         </div>
@@ -153,7 +180,6 @@ export function EntryComposer({ client = entriesClient, onUnauthorized }: Props)
           <button type="submit" disabled={sending || empty} className={`${primaryButtonClass} w-full sm:w-auto`}>
             {sending ? "마음을 읽는 중…" : "일기 보내기"}
           </button>
-          {empty && !sending ? <p className="text-sm text-muted">내용을 적으면 보낼 수 있어요.</p> : null}
         </div>
       </form>
 
@@ -179,7 +205,7 @@ export function EntryComposer({ client = entriesClient, onUnauthorized }: Props)
       ) : null}
 
       {result ? (
-        <section aria-labelledby="result-title" className="rounded-paper border border-line bg-card p-5 shadow-paper">
+        <section aria-labelledby="result-title" className="min-w-0 rounded-paper border border-line bg-card p-5 shadow-paper">
           <h2
             id="result-title"
             ref={resultHeadingRef}
@@ -189,7 +215,7 @@ export function EntryComposer({ client = entriesClient, onUnauthorized }: Props)
             오늘의 일기
           </h2>
           <p className="mt-1 text-sm text-muted">{formatKstDateTime(result.createdAt)}</p>
-          <blockquote className="my-4 border-l-4 border-accent pl-4 font-diary text-lg leading-relaxed text-ink">
+          <blockquote className="my-4 border-l-4 border-accent pl-4 whitespace-pre-wrap [overflow-wrap:anywhere] font-diary text-lg leading-relaxed text-ink">
             {result.content}
           </blockquote>
           <EntryBody entry={result} headingLevel={3} />

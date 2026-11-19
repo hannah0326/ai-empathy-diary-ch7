@@ -7,19 +7,19 @@ type Current = "write" | "entries";
 
 export function AppHeader({ current }: { current: Current }) {
   const linkClass = (active: boolean) =>
-    `inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-medium ${
-      active ? "bg-soft text-ink" : "text-muted hover:bg-soft hover:text-ink"
+    `inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium ${
+      active ? "bg-soft text-ink underline decoration-2 underline-offset-4" : "text-muted hover:bg-soft hover:text-ink"
     }`;
 
   return (
     <header className="border-b border-line">
-      <div className="mx-auto flex w-full max-w-xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-3">
+      <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-3">
         <Link href="/" className="font-diary text-lg font-bold text-ink">
           AI 공감 다이어리
         </Link>
         <nav aria-label="주 메뉴" className="flex items-center gap-1">
           <Link href="/" aria-current={current === "write" ? "page" : undefined} className={linkClass(current === "write")}>
-            쓰기
+            오늘 쓰기
           </Link>
           <Link
             href="/entries"

@@ -10,8 +10,11 @@ export default async function EntriesPage() {
   return (
     <>
       <AppHeader current="entries" />
-      <main id="main" className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-5 py-8">
-        <h1 className="font-diary text-3xl font-bold text-ink">지난 기록</h1>
+      <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-8">
+        <div>
+          <h1 className="font-diary text-3xl font-bold text-ink">지난 기록</h1>
+          <p className="mt-1 text-muted">지금까지 남긴 일기와 그날의 감정을 돌아볼 수 있어요.</p>
+        </div>
         <EntryList />
       </main>
     </>

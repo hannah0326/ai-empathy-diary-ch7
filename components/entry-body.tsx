@@ -8,7 +8,7 @@ import type { Entry } from "@/lib/types";
 
 export function EntryBody({ entry, headingLevel = 2 }: { entry: Entry; headingLevel?: 2 | 3 }) {
   return (
-    <div className="grid gap-4">
+    <div className="grid min-w-0 grid-cols-1 gap-4">
       {entry.crisis ? <CrisisCard headingLevel={headingLevel} /> : null}
 
       {entry.analysisStatus === "done" && entry.emotion && entry.intensity && entry.message ? (
@@ -17,7 +17,7 @@ export function EntryBody({ entry, headingLevel = 2 }: { entry: Entry; headingLe
             <EmotionBadge emotion={entry.emotion} />
             <IntensityDots intensity={entry.intensity} />
           </p>
-          <p className="font-diary text-lg leading-loose text-ink">{entry.message}</p>
+          <p className="whitespace-pre-wrap [overflow-wrap:anywhere] font-diary text-lg leading-loose text-ink">{entry.message}</p>
         </section>
       ) : null}
 

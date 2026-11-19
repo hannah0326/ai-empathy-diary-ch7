@@ -4,8 +4,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { EmotionBadge } from "@/components/emotion-badge";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { EmotionPill } from "@/components/emotion-badge";
+import { CrisisCard } from "@/components/crisis-card";
 import { ErrorBox, LoadingNote, primaryButtonClass, secondaryButtonClass } from "@/components/notices";
 import { entriesClient, type ApiFailureKind, type EntriesClient } from "@/lib/client";
 import { formatKstTime, groupByKstDay } from "@/lib/client/format";
@@ -30,7 +31,7 @@ export function EntryList({ client = entriesClient, hrefFor = (id) => `/entries/
   const [moreError, setMoreError] = useState<LoadError | null>(null); // 더 보기 오류(이미 불러온 목록은 유지)
   // 더 보기 뒤 새로 붙은 첫 항목(초점 이동용)
   const [firstNewId, setFirstNewId] = useState<string | null>(null);
-  const firstNewRef = useRef<HTMLAnchorElement>(null);
+  const firstNewRef = useRef<HTMLButtonElement>(null);
 
   const handleUnauthorized = useCallback(() => {
     if (onUnauthorized) onUnauthorized();
@@ -112,19 +113,22 @@ export function EntryList({ client = entriesClient, hrefFor = (id) => `/entries/
   const groups = groupByKstDay(entries);
 
   return (
-    <div className="grid gap-8">
+    <div className="grid min-w-0 grid-cols-1 gap-8">
       {groups.map((group) => (
-        <section key={group.key} aria-labelledby={`day-${group.key}`}>
-          <h2 id={`day-${group.key}`} className="font-diary text-lg font-bold text-ink">
+        <section key={group.key} className="min-w-0" aria-labelledby={`day-${group.key}`}>
+          <h2
+            id={`day-${group.key}`}
+            className="border-b border-dashed border-line pb-2 font-diary text-lg font-bold text-ink"
+          >
             {group.label}
           </h2>
-          <ul className="mt-3 grid gap-3">
+          <ul className="mt-4 grid grid-cols-1 gap-4">
             {group.items.map((entry) => (
-              <li key={entry.id}>
+              <li key={entry.id} className="min-w-0">
                 <EntryRow
                   entry={entry}
                   href={hrefFor(entry.id)}
-                  linkRef={entry.id === firstNewId ? firstNewRef : undefined}
+                  toggleRef={entry.id === firstNewId ? firstNewRef : undefined}
                 />
               </li>
             ))}
@@ -150,37 +154,84 @@ export function EntryList({ client = entriesClient, hrefFor = (id) => `/entries/
   );
 }
 
+/** 일기 카드: 시각 + 감정 알약, 내용, 접고 펼치는 공감 메시지(위기면 위기 카드와 연락처도), 자세히 보기 링크. */
 function EntryRow({
   entry,
   href,
-  linkRef,
+  toggleRef,
 }: {
   entry: Entry;
   href: string;
-  linkRef?: React.Ref<HTMLAnchorElement>;
+  toggleRef?: React.Ref<HTMLButtonElement>;
 }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const label = entry.crisis ? "공감 메시지와 상담 연락처" : "공감 메시지";
+
   return (
-    <Link
-      ref={linkRef}
-      href={href}
-      className="block rounded-2xl border border-line bg-card p-4 shadow-paper hover:bg-soft"
-    >
-      <span className="block text-sm text-muted">{formatKstTime(entry.createdAt)}</span>
-      <span className="mt-1 line-clamp-2 block font-diary text-lg text-ink">{entry.content}</span>
-      <span className="mt-3 flex flex-wrap items-center gap-2">
+    <article className="min-w-0 rounded-3xl border border-line bg-card p-5 shadow-paper sm:p-6">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <time dateTime={entry.createdAt} className="text-sm font-medium text-muted">
+          {formatKstTime(entry.createdAt)}
+        </time>
         {entry.analysisStatus === "done" && entry.emotion ? (
-          <EmotionBadge emotion={entry.emotion} />
-        ) : entry.analysisStatus === "failed" ? (
-          <span className="rounded-full border border-line px-3 py-1 text-sm text-muted">분석 못 함</span>
+          <EmotionPill emotion={entry.emotion} intensity={entry.intensity} />
         ) : (
-          <span className="rounded-full border border-line px-3 py-1 text-sm text-muted">분석 전</span>
-        )}
-        {entry.crisis ? (
-          <span className="rounded-full border border-crisis-border bg-crisis-bg px-3 py-1 text-sm font-medium text-ink">
-            도움 안내 있음
+          <span className="rounded-full border border-line px-3 py-1 text-sm text-muted">
+            {entry.analysisStatus === "failed" ? "분석 못 함" : "분석 전"}
           </span>
+        )}
+      </div>
+
+      <p
+        className={`mt-3 min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere] font-diary text-lg leading-relaxed text-ink ${
+          open ? "" : "line-clamp-3"
+        }`}
+      >
+        {entry.content}
+      </p>
+
+      <button
+        type="button"
+        ref={toggleRef}
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((v) => !v)}
+        className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-lg text-sm font-medium text-accent hover:underline"
+      >
+        <span aria-hidden="true" className={`inline-block transition-transform ${open ? "rotate-180" : ""}`}>
+          ⌄
+        </span>
+        {open ? "접기" : `${label} 보기`}
+      </button>
+
+      <div id={panelId} hidden={!open} className="min-w-0">
+        {open ? (
+          <div className="mt-2 grid min-w-0 grid-cols-1 gap-4 border-t border-dashed border-line pt-4">
+            {entry.crisis ? <CrisisCard headingLevel={3} /> : null}
+            {entry.analysisStatus === "done" && entry.message ? (
+              <p className="whitespace-pre-wrap [overflow-wrap:anywhere] font-diary text-base leading-loose text-ink">
+                {entry.message}
+              </p>
+            ) : null}
+            {entry.analysisStatus === "failed" ? (
+              <p className="text-sm text-muted">분석을 하지 못했어요. 일기는 저장돼 있어요.</p>
+            ) : null}
+            {entry.analysisStatus === "pending" ? (
+              <p className="text-sm text-muted">아직 분석이 끝나지 않았어요. 조금 뒤에 다시 열어 보세요.</p>
+            ) : null}
+            <p>
+              <Link
+                href={href}
+                aria-label={`${formatKstTime(entry.createdAt)} 일기 자세히 보기(삭제는 여기서)`}
+                className="text-sm text-muted underline underline-offset-4 hover:text-ink"
+              >
+                자세히 보기
+              </Link>
+            </p>
+          </div>
         ) : null}
-      </span>
-    </Link>
+      </div>
+    </article>
   );
 }

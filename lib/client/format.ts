@@ -9,7 +9,7 @@ const dayFormatter = new Intl.DateTimeFormat("ko-KR", {
   year: "numeric",
   month: "long",
   day: "numeric",
-  weekday: "short",
+  weekday: "long",
 });
 const timeFormatter = new Intl.DateTimeFormat("ko-KR", {
   timeZone: KST,
@@ -29,7 +29,7 @@ export function kstDayKey(iso: string): string {
   return keyFormatter.format(new Date(iso));
 }
 
-/** 예: 2026년 11월 19일 (목) */
+/** 예: 2026년 11월 19일 목요일 */
 export function formatKstDay(iso: string): string {
   return dayFormatter.format(new Date(iso));
 }
@@ -39,7 +39,7 @@ export function formatKstTime(iso: string): string {
   return timeFormatter.format(new Date(iso));
 }
 
-/** 날짜와 시각을 함께. 예: 2026년 11월 19일 (목) 오전 10:31 */
+/** 날짜와 시각을 함께. 예: 2026년 11월 19일 목요일 오전 10:31 */
 export function formatKstDateTime(iso: string): string {
   return `${formatKstDay(iso)} ${formatKstTime(iso)}`;
 }
@@ -68,9 +68,11 @@ export const EMOTION_CLASS: Record<Emotion, string> = {
   지침: "emo-tired",
 };
 
-/** 강도 → 말(PRD 7.2절: 조금 / 꽤 / 많이) */
+/** 강도 → 말(5단계: 1 매우 약함 ~ 5 매우 강함) */
 export const INTENSITY_WORD: Record<Intensity, string> = {
-  1: "조금",
-  2: "꽤",
-  3: "많이",
+  1: "매우 약함",
+  2: "약함",
+  3: "보통",
+  4: "강함",
+  5: "매우 강함",
 };

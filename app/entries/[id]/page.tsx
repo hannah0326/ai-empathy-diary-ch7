@@ -11,7 +11,7 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
   return (
     <>
       <AppHeader current="entries" />
-      <main id="main" className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-5 py-8">
+      <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-8">
         <h1 className="font-diary text-3xl font-bold text-ink">일기 보기</h1>
         <EntryDetail id={id} />
       </main>

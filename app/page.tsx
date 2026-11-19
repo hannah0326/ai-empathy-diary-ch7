@@ -12,7 +12,7 @@ export default async function WritePage() {
   return (
     <>
       <AppHeader current="write" />
-      <main id="main" className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-5 py-8">
+      <main id="main" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-8">
         <h1 className="font-diary text-3xl font-bold text-ink">오늘의 한 줄</h1>
         <EntryComposer />
         <FreeModelNotice />
